@@ -10,11 +10,6 @@ variable "cluster_name" {
   type = string
 }
 
-variable "node_count" {
-  type    = number
-  default = 3
-}
-
 variable "subnet_id" {
   type = string
 }

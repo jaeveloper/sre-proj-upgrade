@@ -11,7 +11,13 @@ resource "azurerm_servicebus_topic" "events" {
 }
 
 resource "azurerm_servicebus_subscription" "order" {
-  name     = "order-sub"
-  topic_id = azurerm_servicebus_topic.events.id
+  name               = "order-sub"
+  topic_id           = azurerm_servicebus_topic.events.id
   max_delivery_count = 5
+}
+
+resource "azurerm_servicebus_subscription" "retry" {
+  name               = "retry-sub"
+  topic_id           = azurerm_servicebus_topic.events.id
+  max_delivery_count = 10
 }

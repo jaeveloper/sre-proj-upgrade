@@ -17,6 +17,7 @@ spec:
       serviceAccountName: order-processor-sa
       containers:
         - name: order-processor
+          # TODO: pin to a specific tag/digest e.g. jukpozi/order-processor:1.0.0
           image: jukpozi/order-processor:latest
           imagePullPolicy: Always
 
@@ -31,3 +32,8 @@ spec:
             limits:
               cpu: "500m"
               memory: "512Mi"
+
+          # Workers are background Service Bus consumers — no HTTP port to probe.
+          # Kubernetes will restart the container automatically on crash (default
+          # restartPolicy: Always). Add a livenessProbe here if your worker
+          # exposes a /healthz endpoint or writes a liveness file.

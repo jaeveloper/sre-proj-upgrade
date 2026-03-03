@@ -3,4 +3,9 @@ kind: ServiceAccount
 metadata:
   name: keda-operator
   namespace: keda
-
+  annotations:
+    # Azure Workload Identity: replace with the client ID of the managed
+    # identity that has Service Bus Data Receiver role.
+    azure.workload.identity/client-id: "<MANAGED_IDENTITY_CLIENT_ID>"
+  labels:
+    azure.workload.identity/use: "true"

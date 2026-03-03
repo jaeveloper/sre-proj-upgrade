@@ -4,7 +4,9 @@ metadata:
   name: order-processor-trigger-auth
   namespace: workers
 spec:
-  secretTargetRef:
-    - parameter: connection
-      name: keda-operator-secrets
-      key: SERVICEBUS_CONNECTION_STRING
+  # Uses Azure Workload Identity — no connection string secret needed.
+  # Requires the KEDA operator SA to be annotated with the managed identity
+  # client ID (see k8s/core/keda/keda-operator-sa.yaml) and the identity
+  # must have "Azure Service Bus Data Receiver" role on the namespace.
+  podIdentity:
+    provider: azure-workload
