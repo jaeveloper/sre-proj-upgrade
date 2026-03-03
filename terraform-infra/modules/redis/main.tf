@@ -16,7 +16,7 @@ resource "azurerm_redis_cache" "redis" {
 # Restrict Redis access to AKS pod subnet only (Standard SKU uses firewall rules)
 # AKS subnet is 10.0.0.0/22 after network expansion
 resource "azurerm_redis_firewall_rule" "aks_subnet" {
-  name                = "allow-aks-pods"
+  name                = "allow_aks_pods"
   redis_cache_name    = azurerm_redis_cache.redis.name
   resource_group_name = var.rg_name
   start_ip            = "10.0.0.0"

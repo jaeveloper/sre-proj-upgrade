@@ -39,7 +39,7 @@ resource "azurerm_monitor_diagnostic_setting" "aks" {
   enabled_log { category = "kube-scheduler" }
   enabled_log { category = "cluster-autoscaler" }
 
-  metric {
-    category = "AllMetrics"
-  }
+  enabled_metric {
+  category = "AllMetrics"
+ }
 }
