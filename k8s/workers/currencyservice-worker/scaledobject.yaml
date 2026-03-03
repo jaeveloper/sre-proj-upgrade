@@ -1,0 +1,21 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: currencyservice-worker-scaledobject
+  namespace: workers
+spec:
+  scaleTargetRef:
+    name: currencyservice-worker
+  pollingInterval: 10
+  cooldownPeriod: 60
+  minReplicaCount: 0
+  maxReplicaCount: 8
+  triggers:
+    - type: azure-servicebus
+      metadata:
+        namespace: sre-sb-namespace
+        topicName: business-events
+        subscriptionName: currencyservice-sub
+        messageCount: "5"
+      authenticationRef:
+        name: currencyservice-worker-trigger-auth

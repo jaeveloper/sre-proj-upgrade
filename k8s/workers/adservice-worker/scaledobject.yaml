@@ -1,0 +1,21 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: adservice-worker-scaledobject
+  namespace: workers
+spec:
+  scaleTargetRef:
+    name: adservice-worker
+  pollingInterval: 10
+  cooldownPeriod: 60
+  minReplicaCount: 0
+  maxReplicaCount: 8
+  triggers:
+    - type: azure-servicebus
+      metadata:
+        namespace: sre-sb-namespace
+        topicName: business-events
+        subscriptionName: adservice-sub
+        messageCount: "10"
+      authenticationRef:
+        name: adservice-worker-trigger-auth
