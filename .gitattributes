@@ -1,0 +1,16 @@
+# Normalize all text files to LF in the repo; checkout as-is on any OS
+* text=auto eol=lf
+
+# Windows batch/cmd files must stay CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binaries — no line-ending processing
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.jar binary
+*.zip binary
+*.gz  binary

@@ -36,5 +36,11 @@ module "cosmos" {
   location = var.location
 }
 
+module "redis" {
+  source   = "./redis"
+  rg_name  = azurerm_resource_group.rg.name
+  location = var.location
+}
+
 
 
