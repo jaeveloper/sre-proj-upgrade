@@ -1,0 +1,10 @@
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: retry-worker-trigger-auth
+  namespace: workers
+spec:
+  secretTargetRef:
+    - parameter: connection
+      name: keda-operator-secrets
+      key: SERVICEBUS_CONNECTION_STRING

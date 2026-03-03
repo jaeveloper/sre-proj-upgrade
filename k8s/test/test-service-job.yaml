@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test-service-job
+  namespace: core
+spec:
+  template:
+    metadata:
+      labels:
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: nerve-center-sa   # or another SA with federated credential
+      containers:
+        - name: test-service
+          image: jukpozi/test-service:latest
+      restartPolicy: Never

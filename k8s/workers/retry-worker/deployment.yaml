@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: retry-worker
+  namespace: workers
+spec:
+  replicas: 0   # KEDA controls replicas
+  selector:
+    matchLabels:
+      app: retry-worker
+  template:
+    metadata:
+      labels:
+        app: retry-worker
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: retry-worker-sa
+      containers:
+        - name: retry-worker
+          image: jukpozi/retry-worker:latest
+          imagePullPolicy: Always
+
+          env:
+            - name: NERVE_CENTER_URL
+              value: "http://nerve-center.core.svc.cluster.local:8080"
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

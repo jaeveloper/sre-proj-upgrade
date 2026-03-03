@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nerve-center
+  namespace: core
+spec:
+  replicas: 1   # 1 for now - HA control plane
+  selector:
+    matchLabels:
+      app: nerve-center
+  template:
+    metadata:
+      labels:
+        app: nerve-center
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: nerve-center-sa
+      containers:
+        - name: nerve-center
+          image: jukpozi/nerve-center:latest
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 8080
+
+          env:
+            # No secrets needed anymore
+            # Add any app-specific configs here if required
+
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "1Gi"

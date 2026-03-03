@@ -1,0 +1,40 @@
+systemState:
+  state: NORMAL | DEGRADED | PAUSED | CRITICAL
+  updatedAt: timestamp
+  reason: string
+
+controls:
+  pauseProcessing: boolean
+  maxProcessingRate: number | null
+
+health:
+  serviceBus:
+    backlogStatus: OK | GROWING | CRITICAL
+  workers:
+    orderProcessor: OK | FAILING
+    retryWorker: OK | FAILING
+
+
+system:
+  state: NORMAL        # NORMAL | DEGRADED | PAUSED | CRITICAL
+  updatedAt: null     # ISO 8601 timestamp of last state change - 2026-02-06T10:55:00Z
+  reason: ""          # Optional reason for current state - "Backlog growing but Cosmos RU throttling detected"
+
+controls:                   
+  pauseProcessing: false    # Boolean - If true, workers should pause processing new messages
+  maxProcessingRate: null   #  number | null - 200 | null # messages per second, null = unlimited
+
+health:
+  serviceBus:          
+    backlog: UNKNOWN        # OK  | GROWING | CRITICAL
+  workers:
+    orderProcessor: UNKNOWN       # OK | FAILING  
+    retryWorker: UNKNOWN        # OK | FAILING
+
+
+
+/* 
+  This contract defines the structure of the JSON document stored in Cosmos DB that represents the state of the Nerve Center. It includes the overall system state, controls for managing processing, and health status of key components. The Nerve Center will read and update this document to reflect the current status and control settings for the order processing system.
+*/
+
+// Note: The actual implementation of the Nerve Center will include logic to update the `state`, `reason`, and `health` fields based on real-time monitoring of the Service Bus backlog and worker health. The `controls` can be updated via an API or other interface to allow operators to pause processing or set a maximum processing rate as needed.
