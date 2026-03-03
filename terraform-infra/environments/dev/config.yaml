@@ -1,0 +1,23 @@
+environment: dev
+
+location: eastus
+
+rg_name: jd-core-rg
+
+network:
+  vnet_cidr: "10.0.0.0/16"
+  subnet_cidr: "10.0.0.0/22"
+
+aks:
+  cluster_name: "jd-aks"
+  vm_size: "Standard_D4ds_v5"
+  node_min: 2
+  node_max: 5
+  service_cidr: "10.1.0.0/16"
+  dns_service_ip: "10.1.0.10"
+
+cosmos:
+  throughput: 4000
+
+servicebus:
+  sku: "Standard"

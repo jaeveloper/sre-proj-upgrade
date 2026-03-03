@@ -5,3 +5,8 @@ variable "location" {
 variable "rg_name" {
   type = string
 }
+
+variable "sku" {
+  type    = string
+  default = "Standard"
+}

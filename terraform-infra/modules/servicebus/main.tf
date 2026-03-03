@@ -2,7 +2,7 @@ resource "azurerm_servicebus_namespace" "sb" {
   name                = "sre-sb-namespace"
   location            = var.location
   resource_group_name = var.rg_name
-  sku                 = "Standard"
+  sku                 = var.sku
 }
 
 resource "azurerm_servicebus_topic" "events" {
