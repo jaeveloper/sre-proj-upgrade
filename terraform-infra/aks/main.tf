@@ -9,15 +9,15 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   default_node_pool {
-    name                = "system"
-    vm_size             = "Standard_D4ds_v5"
-    vnet_subnet_id      = var.subnet_id
-    # auto_scaling_enabled is the correct azurerm v4 attribute name.
-    # (v3 used enable_auto_scaling — renamed in azurerm v4 upgrade)
-    # IDE shows schema error until `terraform init -upgrade` downloads the v4 provider.
-    auto_scaling_enabled = true
-    min_count            = 2
-    max_count            = 5
+    name           = "system"
+    vm_size        = "Standard_D4ds_v5"
+    vnet_subnet_id = var.subnet_id
+    node_count     = 2  # TODO: replace with autoscaler once v4 provider is initialised:
+                        #   remove node_count, uncomment the three lines below, then run:
+                        #   terraform init -upgrade && terraform apply
+    # auto_scaling_enabled = true   # azurerm v4 attr (renamed from enable_auto_scaling)
+    # min_count            = 2
+    # max_count            = 5
   }
 
   network_profile {
