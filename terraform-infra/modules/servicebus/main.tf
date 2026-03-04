@@ -8,6 +8,8 @@ resource "azurerm_servicebus_namespace" "sb" {
 resource "azurerm_servicebus_topic" "events" {
   name         = "business-events"
   namespace_id = azurerm_servicebus_namespace.sb.id
+
+  depends_on = [azurerm_servicebus_namespace.sb]
 }
 
 # ── original workers ────────────────────────────────────────────

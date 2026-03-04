@@ -1,6 +1,6 @@
 environment: dev
 
-location: eastus
+location: westus2
 
 rg_name: jd-core-rg
 
@@ -10,7 +10,7 @@ network:
 
 aks:
   cluster_name: "jd-aks"
-  vm_size: "Standard_D4ds_v5"
+  vm_size: "Standard_D4s_v3"
   node_min: 2
   node_max: 5
   service_cidr: "10.1.0.0/16"
