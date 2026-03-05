@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM --platform=$BUILDPLATFORM python:3.12.8-alpine@sha256:54bec49592c8455de8d5983d984efff76b6417a6af9b5dcc8d0237bf6ad3bd20 AS base
+FROM --platform=$BUILDPLATFORM python:3.12-alpine AS base
 
 FROM base AS builder
 
 RUN apk update \
+    && apk upgrade --no-cache \
     && apk add --no-cache g++ linux-headers \
     && rm -rf /var/cache/apk/*
 
@@ -29,6 +30,7 @@ FROM base
 ENV PYTHONUNBUFFERED=1
 
 RUN apk update \
+    && apk upgrade --no-cache \
     && apk add --no-cache libstdc++ \
     && rm -rf /var/cache/apk/*
 
