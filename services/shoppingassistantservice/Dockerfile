@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM --platform=$BUILDPLATFORM python:3.12.8-slim@sha256:123be5684f39d8476e64f47a5fddf38f5e9d839baff5c023c815ae5bdfae0df7 AS base
+FROM --platform=$BUILDPLATFORM python:3.12-slim AS base
 
 FROM base AS builder
 
 RUN apt-get -qq update \
+    && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends g++ \
     && rm -rf /var/lib/apt/lists/*
 
@@ -27,6 +28,9 @@ RUN pip install -r requirements.txt
 FROM base
 # Enable unbuffered logging
 ENV PYTHONUNBUFFERED=1
+
+# Apply OS security patches
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
 
 # get packages
 WORKDIR /shoppingassistantservice
