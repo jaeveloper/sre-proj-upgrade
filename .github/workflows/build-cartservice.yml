@@ -24,7 +24,7 @@ jobs:
         run: |
           docker build \
           -t ${{ secrets.DOCKER_USERNAME }}/cartservice:latest \
-          ./services/cartservice
+          ./services/cartservice/src
 
       - name: Push Docker image
         run: |
