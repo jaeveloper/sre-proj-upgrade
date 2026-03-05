@@ -21,11 +21,11 @@ jobs:
 
       - name: Install dependencies
         working-directory: services/emailservice
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt pytest
 
       - name: Run tests
         working-directory: services/emailservice
-        run: pytest
+        run: python -m pytest
         continue-on-error: true
 
       - name: Login to DockerHub
