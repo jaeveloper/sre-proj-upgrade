@@ -1,0 +1,7 @@
+apiVersion: v2
+name: paymentservice-worker
+description: KEDA-scaled worker for paymentservice-worker events
+type: application
+version: 0.1.0
+appVersion: "latest"
+

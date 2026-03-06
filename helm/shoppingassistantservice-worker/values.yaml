@@ -1,0 +1,33 @@
+name: shoppingassistantservice-worker
+namespace: workers
+
+image:
+  repository: jukpozi/shoppingassistantservice-worker
+  tag: latest
+  pullPolicy: Always
+
+serviceAccount:
+  name: shoppingassistantservice-worker-sa
+  clientId: "<MANAGED_IDENTITY_CLIENT_ID>"
+
+env:
+  - name: SHOPPINGASSISTANTSERVICE_URL
+    value: "http://shoppingassistantservice.core.svc.cluster.local:8080"
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "512Mi"
+  limits:
+    cpu: "1"
+    memory: "2Gi"
+
+keda:
+  serviceBusNamespace: sre-sb-namespace
+  topicName: business-events
+  subscriptionName: shoppingassistant-sub
+  messageCount: "1"
+  pollingInterval: 15
+  cooldownPeriod: 120
+  minReplicaCount: 0
+  maxReplicaCount: 3

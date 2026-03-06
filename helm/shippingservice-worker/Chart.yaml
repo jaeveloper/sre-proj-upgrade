@@ -1,0 +1,7 @@
+apiVersion: v2
+name: shippingservice-worker
+description: KEDA-scaled worker for shippingservice-worker events
+type: application
+version: 0.1.0
+appVersion: "latest"
+

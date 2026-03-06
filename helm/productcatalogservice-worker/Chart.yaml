@@ -1,0 +1,7 @@
+apiVersion: v2
+name: productcatalogservice-worker
+description: KEDA-scaled worker for productcatalogservice-worker events
+type: application
+version: 0.1.0
+appVersion: "latest"
+
