@@ -7,8 +7,8 @@ resource "azurerm_user_assigned_identity" "worker" {
   resource_group_name = var.rg_name
 }
 
-#  Federated Identity Credential 
-# Links each K8s ServiceAccount to its Managed Identity via OIDC
+#  Federated Identity Credential (workload pod) 
+# Links each worker K8s ServiceAccount to its Managed Identity via OIDC
 resource "azurerm_federated_identity_credential" "worker" {
   for_each = toset(var.workers)
 
@@ -17,6 +17,20 @@ resource "azurerm_federated_identity_credential" "worker" {
   audience        = ["api://AzureADTokenExchange"]
   issuer          = var.oidc_issuer_url
   subject         = "system:serviceaccount:${var.k8s_namespace}:${each.key}-sa"
+}
+
+# Federated Identity Credential (KEDA operator override)
+# When TriggerAuthentication uses identityId to override, KEDA presents the
+# keda-operator SA token — so each worker identity needs a federated credential
+# trusting system:serviceaccount:keda:keda-operator as well.
+resource "azurerm_federated_identity_credential" "keda_override" {
+  for_each = toset(var.workers)
+
+  name      = "${each.key}-keda-override"
+  parent_id = azurerm_user_assigned_identity.worker[each.key].id
+  audience  = ["api://AzureADTokenExchange"]
+  issuer    = var.oidc_issuer_url
+  subject   = "system:serviceaccount:${var.keda_namespace}:keda-operator"
 }
 
 #  Service Bus RBAC 
