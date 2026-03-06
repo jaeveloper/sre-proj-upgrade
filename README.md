@@ -17,7 +17,6 @@ The system demonstrates:
 - 🔐 Azure RBAC for Service Bus (no SAS)
 - ⚡ KEDA-based event-driven autoscaling
 - 🔄 Argo CD GitOps continuous reconciliation
-- 🧠 Centralized operational control via Nerve Center
 - 🐳 Containerized microservices with Docker
 - 🏗 Terraform-provisioned Azure infrastructure
 
@@ -48,11 +47,8 @@ This architecture mirrors enterprise-grade Azure platform engineering patterns.
 │                        AKS Cluster                         │
 │                                                            │
 │   Namespace: core                                          │
-│   ├── nerve-center                                         │
 │                                                            │
 │   Namespace: workers                                       │
-│   ├── order-processor                                      │
-│   ├── retry-worker                                         │
 │   └── KEDA ScaledObjects                                   │
 │                                                            │
 │   Namespace: keda                                          │
@@ -72,92 +68,7 @@ Azure Service Bus          Azure Cosmos DB
 
 ---
 
-## 1️⃣ Nerve Center (Control Plane API)
-
-Nerve Center acts as an internal operational control API.
-
-Responsibilities:
-
-- Global pause/unpause of worker processing
-- System state visibility
-- Operational control endpoint
-- Runtime control without redeployment
-
-Workers continuously poll:
-
-```
-
-GET /system-state
-
-```
-
-If:
-
-```
-
-pauseProcessing = true
-
-```
-
-Workers stop consuming messages but remain alive.
-
----
-
-### Example
-
-**Pause Processing**
-```
-
-POST /pause-processing
-
-```
-
-**Check State**
-```
-
-GET /system-state
-
-
-### 📷 IMAGE G – Port Forward to Nerve Center
-
-> <img width="873" height="291" alt="image" src="https://github.com/user-attachments/assets/3c5c3396-b124-4771-ade4-5f7aa9afee39" />
-
-
-```
-
----
-
-
-```
-
-kubectl port-forward -n core deployment/nerve-center 8080:8080
-
-
----
-
-### 📷 IMAGE H – Pause Processing Response
-
-> <img width="940" height="401" alt="image" src="https://github.com/user-attachments/assets/db475863-42d8-4b71-a4e9-7a4afd0e227e" />
-
-
-
-
----
-
-### 📷 IMAGE I – System State Check (200 OK)
-
-> <img width="861" height="392" alt="image" src="https://github.com/user-attachments/assets/857fe715-8cd8-4530-b132-29f1261e47dd" />
-
-
----
-
-````
-
-
-## 2️⃣ Worker Services
-
-### order-processor
-### retry-worker
+## 1️⃣ Worker Services
 
 Each worker:
 
@@ -166,7 +77,6 @@ Each worker:
 - Connects to:
   - Azure Service Bus
   - Azure Cosmos DB
-- Obeys Nerve Center state
 - Scales via KEDA
 
 No secrets.
@@ -308,8 +218,7 @@ Images pushed to Docker Hub:
 <img width="1877" height="1017" alt="image" src="https://github.com/user-attachments/assets/4c83ddfe-901e-426d-a0b6-c3ea1b535faa" />
 
 ```
-jukpozi/order-processor:latest
-jukpozi/retry-worker:latest
+jukpozi/<service>-worker:latest
 ```
 
 ---
@@ -366,16 +275,12 @@ Zero hardcoded credentials.
 sre-proj/
 ├── k8s/
 │   ├── core/
-│   │   ├── nerve-center/
 │   │   └── keda/
 │   ├── workers/
-│   │   ├── order-processor/
-│   │   └── retry-worker/
 │   ├── namespaces/
 │   └── observability/
 ├── services/
 │   ├── worker-service/
-│   ├── nerve-center/
 │   └── test-service/
 └── terraform-infra/
 ```

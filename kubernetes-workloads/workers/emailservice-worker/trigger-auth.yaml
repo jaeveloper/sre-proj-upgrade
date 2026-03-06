@@ -1,8 +1,0 @@
-apiVersion: keda.sh/v1alpha1
-kind: TriggerAuthentication
-metadata:
-  name: emailservice-worker-trigger-auth
-  namespace: workers
-spec:
-  podIdentity:
-    provider: azure-workload
