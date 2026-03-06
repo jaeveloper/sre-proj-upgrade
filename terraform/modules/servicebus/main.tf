@@ -12,19 +12,6 @@ resource "azurerm_servicebus_topic" "events" {
   depends_on = [azurerm_servicebus_namespace.sb]
 }
 
-# ── original workers ────────────────────────────────────────────
-resource "azurerm_servicebus_subscription" "order" {
-  name               = "order-sub"
-  topic_id           = azurerm_servicebus_topic.events.id
-  max_delivery_count = 5
-}
-
-resource "azurerm_servicebus_subscription" "retry" {
-  name               = "retry-sub"
-  topic_id           = azurerm_servicebus_topic.events.id
-  max_delivery_count = 10
-}
-
 # ── microservice workers ─────────────────────────────────────────
 resource "azurerm_servicebus_subscription" "adservice" {
   name               = "adservice-sub"

@@ -60,3 +60,17 @@ module "redis" {
   location = local.config.location
   rg_name  = azurerm_resource_group.rg.name
 }
+
+module "workload_identity" {
+  source = "../../modules/workload-identity"
+
+  location                = local.config.location
+  rg_name                 = azurerm_resource_group.rg.name
+  oidc_issuer_url         = module.aks.oidc_issuer_url
+  servicebus_namespace_id = module.servicebus.namespace_id
+}
+
+output "worker_client_ids" {
+  description = "Managed Identity client IDs — paste into helm/workers/*/values.yaml"
+  value       = module.workload_identity.client_ids
+}
