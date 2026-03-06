@@ -40,3 +40,4 @@ ENV DOTNET_EnableDiagnostics=0 \
 USER 1000
 ENTRYPOINT ["/app/cartservice"]
 
+
