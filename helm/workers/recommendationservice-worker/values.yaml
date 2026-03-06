@@ -8,7 +8,7 @@ image:
 
 serviceAccount:
   name: recommendationservice-worker-sa
-  clientId: "<MANAGED_IDENTITY_CLIENT_ID>"
+  clientId: "a650b45d-933e-4540-99c0-bec435269db8"
 
 env:
   - name: RECOMMENDATIONSERVICE_URL

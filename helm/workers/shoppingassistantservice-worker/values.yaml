@@ -8,7 +8,7 @@ image:
 
 serviceAccount:
   name: shoppingassistantservice-worker-sa
-  clientId: "<MANAGED_IDENTITY_CLIENT_ID>"
+  clientId: "cd675966-e964-4660-8b83-eebeaf0619c5"
 
 env:
   - name: SHOPPINGASSISTANTSERVICE_URL

@@ -8,7 +8,7 @@ image:
 
 serviceAccount:
   name: checkoutservice-worker-sa
-  clientId: "<MANAGED_IDENTITY_CLIENT_ID>"
+  clientId: "0744a964-44cb-470d-976c-0251afd3db83"
 
 env:
   - name: CHECKOUTSERVICE_URL

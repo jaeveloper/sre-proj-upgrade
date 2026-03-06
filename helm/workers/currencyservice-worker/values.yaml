@@ -8,7 +8,7 @@ image:
 
 serviceAccount:
   name: currencyservice-worker-sa
-  clientId: "<MANAGED_IDENTITY_CLIENT_ID>"
+  clientId: "c9fdfd19-1c8d-493b-b143-4d625f2fbb5b"
 
 env:
   - name: CURRENCYSERVICE_URL

@@ -8,7 +8,7 @@ image:
 
 serviceAccount:
   name: adservice-worker-sa
-  clientId: "<MANAGED_IDENTITY_CLIENT_ID>"
+  clientId: "83921dd0-6fbf-4a4a-bc98-8af2f7d1a6d4"
 
 env:
   - name: ADSERVICE_URL

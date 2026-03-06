@@ -8,7 +8,7 @@ image:
 
 serviceAccount:
   name: emailservice-worker-sa
-  clientId: "<MANAGED_IDENTITY_CLIENT_ID>"
+  clientId: "5128d644-0463-4e9d-bad8-fa2d26882f89"
 
 env:
   - name: EMAILSERVICE_URL
