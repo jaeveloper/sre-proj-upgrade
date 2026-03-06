@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: checkoutservice
+  name: checkoutservice-worker
   namespace: argocd
 
 spec:

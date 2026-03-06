@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: cartservice
+  name: recommendationservice-worker
   namespace: argocd
 
 spec:
@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/jaeveloper/sre-proj-upgrade
     targetRevision: main
-    path: helm/workers/cartservice-worker
+    path: helm/workers/recommendationservice-worker
 
   destination:
     server: https://kubernetes.default.svc

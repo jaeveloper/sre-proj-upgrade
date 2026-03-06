@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: shoppingassistantservice
+  name: shippingservice-worker
   namespace: argocd
 
 spec:
@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/jaeveloper/sre-proj-upgrade
     targetRevision: main
-    path: helm/workers/shoppingassistantservice-worker
+    path: helm/workers/shippingservice-worker
 
   destination:
     server: https://kubernetes.default.svc

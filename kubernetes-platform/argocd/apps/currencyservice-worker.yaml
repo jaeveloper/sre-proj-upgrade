@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: paymentservice
+  name: currencyservice-worker
   namespace: argocd
 
 spec:
@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/jaeveloper/sre-proj-upgrade
     targetRevision: main
-    path: helm/workers/paymentservice-worker
+    path: helm/workers/currencyservice-worker
 
   destination:
     server: https://kubernetes.default.svc
