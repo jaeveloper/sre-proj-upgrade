@@ -74,3 +74,8 @@ output "worker_client_ids" {
   description = "Managed Identity client IDs — paste into helm/workers/*/values.yaml"
   value       = module.workload_identity.client_ids
 }
+
+output "keda_operator_client_id" {
+  description = "KEDA operator Managed Identity client ID — configure in KEDA ArgoCD app helm values"
+  value       = module.workload_identity.keda_operator_client_id
+}

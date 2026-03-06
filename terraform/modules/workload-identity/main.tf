@@ -28,3 +28,27 @@ resource "azurerm_role_assignment" "servicebus_receiver" {
   role_definition_name = "Azure Service Bus Data Receiver"
   principal_id         = azurerm_user_assigned_identity.worker[each.key].principal_id
 }
+
+# ─── KEDA Operator Identity ───────────────────────────────────────────────────
+# KEDA's operator pod itself needs workload identity to call Azure Service Bus
+# metrics APIs on behalf of the TriggerAuthentication resources.
+
+resource "azurerm_user_assigned_identity" "keda_operator" {
+  name                = "keda-operator"
+  location            = var.location
+  resource_group_name = var.rg_name
+}
+
+resource "azurerm_federated_identity_credential" "keda_operator" {
+  name      = "keda-operator"
+  parent_id = azurerm_user_assigned_identity.keda_operator.id
+  audience  = ["api://AzureADTokenExchange"]
+  issuer    = var.oidc_issuer_url
+  subject   = "system:serviceaccount:${var.keda_namespace}:keda-operator"
+}
+
+resource "azurerm_role_assignment" "keda_servicebus_receiver" {
+  scope                = var.servicebus_namespace_id
+  role_definition_name = "Azure Service Bus Data Receiver"
+  principal_id         = azurerm_user_assigned_identity.keda_operator.principal_id
+}

@@ -13,3 +13,8 @@ output "principal_ids" {
     name => identity.principal_id
   }
 }
+
+output "keda_operator_client_id" {
+  description = "Client ID of the KEDA operator Managed Identity"
+  value       = azurerm_user_assigned_identity.keda_operator.client_id
+}

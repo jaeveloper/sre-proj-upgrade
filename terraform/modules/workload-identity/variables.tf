@@ -38,3 +38,9 @@ variable "k8s_namespace" {
   description = "Kubernetes namespace where worker ServiceAccounts live"
   default     = "workers"
 }
+
+variable "keda_namespace" {
+  type        = string
+  description = "Kubernetes namespace where KEDA operator ServiceAccount lives"
+  default     = "keda"
+}
