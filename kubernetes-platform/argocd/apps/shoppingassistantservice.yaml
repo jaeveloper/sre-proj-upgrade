@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/jaeveloper/sre-proj-upgrade
     targetRevision: main
-    path: helm/shoppingassistantservice-worker
+    path: helm/workers/shoppingassistantservice-worker
 
   destination:
     server: https://kubernetes.default.svc

@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/jaeveloper/sre-proj-upgrade
     targetRevision: main
-    path: helm/emailservice-worker
+    path: helm/workers/emailservice-worker
 
   destination:
     server: https://kubernetes.default.svc
