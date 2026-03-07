@@ -27,9 +27,7 @@ COPY package*.json ./
 
 RUN npm install --only=production
 
-FROM alpine:3.22
-
-RUN apk add --no-cache nodejs
+FROM node:20.18.1-alpine@sha256:24fb6aa7020d9a20b00d6da6d1714187c45ed00d1eb4adb01395843c338b9372
 
 WORKDIR /usr/src/app
 
