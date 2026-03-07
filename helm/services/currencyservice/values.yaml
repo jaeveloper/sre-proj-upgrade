@@ -30,5 +30,5 @@ env:
     value: "7000"
   - name: ENABLE_TRACING
     value: "0"
-  - name: ENABLE_PROFILER
-    value: "0"
+  - name: DISABLE_PROFILER
+    value: "1"
