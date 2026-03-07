@@ -1,0 +1,36 @@
+name: cartservice
+namespace: core
+
+replicaCount: 1
+
+image:
+  repository: jukpozi/cartservice
+  tag: latest
+  pullPolicy: Always
+
+serviceAccount:
+  name: cartservice-sa
+
+containerPort: 7070
+
+service:
+  type: ClusterIP
+  port: 7070
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "128Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+env:
+  - name: REDIS_ADDR
+    # Replace with your Azure Cache for Redis hostname, e.g.:
+    # <redis-name>.redis.cache.windows.net:6380,password=<key>,ssl=True,abortConnect=False
+    value: "<REDIS_CONNECTION_STRING>"
+  - name: ASPNETCORE_HTTP_PORTS
+    value: "7070"
+  - name: ENABLE_TRACING
+    value: "0"

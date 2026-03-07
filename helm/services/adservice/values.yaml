@@ -1,0 +1,34 @@
+name: adservice
+namespace: core
+
+replicaCount: 1
+
+image:
+  repository: jukpozi/adservice
+  tag: latest
+  pullPolicy: Always
+
+serviceAccount:
+  name: adservice-sa
+
+containerPort: 9555
+
+service:
+  type: ClusterIP
+  port: 9555
+
+resources:
+  requests:
+    cpu: "200m"
+    memory: "256Mi"
+  limits:
+    cpu: "500m"
+    memory: "512Mi"
+
+env:
+  - name: PORT
+    value: "9555"
+  - name: ENABLE_TRACING
+    value: "0"
+  - name: ENABLE_PROFILER
+    value: "0"

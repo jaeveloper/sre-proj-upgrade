@@ -1,0 +1,34 @@
+name: currencyservice
+namespace: core
+
+replicaCount: 1
+
+image:
+  repository: jukpozi/currencyservice
+  tag: latest
+  pullPolicy: Always
+
+serviceAccount:
+  name: currencyservice-sa
+
+containerPort: 7000
+
+service:
+  type: ClusterIP
+  port: 7000
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "200m"
+    memory: "256Mi"
+
+env:
+  - name: PORT
+    value: "7000"
+  - name: ENABLE_TRACING
+    value: "0"
+  - name: ENABLE_PROFILER
+    value: "0"
