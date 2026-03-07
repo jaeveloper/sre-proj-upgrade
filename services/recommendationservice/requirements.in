@@ -1,3 +1,4 @@
+setuptools
 google-api-core==2.28.1
 google-cloud-profiler==4.1.0
 grpcio-health-checking==1.76.0

@@ -4,6 +4,8 @@
 #
 #    pip-compile requirements.in
 #
+setuptools
+    # via pkg_resources (no longer bundled in Python 3.12+)
 backoff==2.2.1
     # via
     #   opentelemetry-exporter-otlp-proto-common
