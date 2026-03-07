@@ -41,7 +41,8 @@ WORKDIR /recommendationservice
 COPY --from=builder /usr/local/lib/python3.12/ /usr/local/lib/python3.12/
 
 # Ensure setuptools/pkg_resources available (not bundled in Python 3.12+)
-RUN pip install --no-cache-dir setuptools
+RUN pip install --no-cache-dir setuptools && \
+    python -c "import pkg_resources; print('pkg_resources OK')"
 
 # Add the application
 COPY . .
