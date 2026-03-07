@@ -29,6 +29,8 @@ RUN npm install --only=production
 
 FROM node:20-alpine
 
+RUN apk upgrade --no-cache
+
 WORKDIR /usr/src/app
 
 COPY --from=builder /usr/src/app/node_modules ./node_modules
