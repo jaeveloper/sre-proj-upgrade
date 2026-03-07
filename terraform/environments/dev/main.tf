@@ -32,6 +32,9 @@ module "aks" {
   vm_size          = local.config.aks.vm_size
   node_min         = local.config.aks.node_min
   node_max         = local.config.aks.node_max
+  user_vm_size     = local.config.aks.user_vm_size
+  user_node_min    = local.config.aks.user_node_min
+  user_node_max    = local.config.aks.user_node_max
   subnet_id        = module.network.aks_subnet_id
   log_analytics_id = module.observability.log_analytics_id
   service_cidr     = local.config.aks.service_cidr

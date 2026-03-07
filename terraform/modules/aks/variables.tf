@@ -38,3 +38,18 @@ variable "dns_service_ip" {
   type = string
 }
 
+variable "user_vm_size" {
+  type    = string
+  default = "Standard_D2s_v3"
+}
+
+variable "user_node_min" {
+  type    = number
+  default = 1
+}
+
+variable "user_node_max" {
+  type    = number
+  default = 3
+}
+

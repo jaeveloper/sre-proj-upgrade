@@ -11,8 +11,11 @@ network:
 aks:
   cluster_name: "jd-aks"
   vm_size: "Standard_B4als_v2"
-  node_min: 2
+  node_min: 1
   node_max: 3
+  user_vm_size: "Standard_D2s_v3"
+  user_node_min: 1
+  user_node_max: 3
   service_cidr: "10.1.0.0/16"
   dns_service_ip: "10.1.0.10"
 

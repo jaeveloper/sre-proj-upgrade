@@ -27,6 +27,18 @@ resource "azurerm_kubernetes_cluster" "aks" {
   oidc_issuer_enabled       = true
 }
 
+# User node pool — separate SKU to avoid capacity restrictions on system pool
+resource "azurerm_kubernetes_cluster_node_pool" "user" {
+  name                  = "userpool"
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.aks.id
+  vm_size               = var.user_vm_size
+  vnet_subnet_id        = var.subnet_id
+  auto_scaling_enabled  = true
+  min_count             = var.user_node_min
+  max_count             = var.user_node_max
+  mode                  = "User"
+}
+
 # Replaces oms_agent (removed in azurerm v4) — streams AKS control-plane
 # logs and metrics to the existing Log Analytics workspace
 resource "azurerm_monitor_diagnostic_setting" "aks" {
