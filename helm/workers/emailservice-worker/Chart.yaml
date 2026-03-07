@@ -1,7 +1,0 @@
-apiVersion: v2
-name: emailservice-worker
-description: KEDA-scaled worker for emailservice-worker events
-type: application
-version: 0.1.0
-appVersion: "latest"
-

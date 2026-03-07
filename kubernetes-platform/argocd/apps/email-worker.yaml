@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: productcatalogservice
+  name: email-worker
   namespace: argocd
 
 spec:
@@ -10,11 +10,11 @@ spec:
   source:
     repoURL: https://github.com/jaeveloper/sre-proj-upgrade
     targetRevision: main
-    path: helm/core-services/productcatalogservice
+    path: helm/workers/email-worker
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: core
+    namespace: workers
 
   syncPolicy:
     automated:

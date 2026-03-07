@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/jaeveloper/sre-proj-upgrade
     targetRevision: main
-    path: helm/services/recommendationservice
+    path: helm/core-services/recommendationservice
 
   destination:
     server: https://kubernetes.default.svc

@@ -1,6 +1,0 @@
-apiVersion: v2
-name: currencyservice-worker
-description: KEDA-scaled worker for currencyservice events
-type: application
-version: 0.1.0
-appVersion: "latest"
