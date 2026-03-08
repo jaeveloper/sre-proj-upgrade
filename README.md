@@ -1,339 +1,380 @@
+﻿# Azure Cloud-Native Microservices Platform on AKS
 
-
-```markdown
-# Azure Cloud-Native Event-Driven Platform on AKS  
-### (Workload Identity + Cosmos RBAC + KEDA + Argo CD GitOps)
+**Workload Identity  Cosmos DB RBAC  KEDA  Argo CD GitOps  Terraform**
 
 ---
 
-## 📌 Executive Summary
+## Executive Summary
 
-This project implements a secure, event-driven microservices platform on Azure Kubernetes Service (AKS) using modern cloud-native and zero-trust patterns.
+This project delivers a production-grade, event-driven microservices platform on Azure Kubernetes Service (AKS). It is based on the Google Online Boutique e-commerce demo, re-architected for Azure with enterprise security and operations patterns throughout.
 
-The system demonstrates:
+Key capabilities:
 
-- 🔐 Azure Workload Identity (OIDC federation)
-- 🔐 Cosmos DB Native RBAC (no keys)
-- 🔐 Azure RBAC for Service Bus (no SAS)
-- ⚡ KEDA-based event-driven autoscaling
-- 🔄 Argo CD GitOps continuous reconciliation
-- 🐳 Containerized microservices with Docker
-- 🏗 Terraform-provisioned Azure infrastructure
-
-This architecture mirrors enterprise-grade Azure platform engineering patterns.
+- **Azure Workload Identity**  OIDC-federated pod authentication, zero stored credentials
+- **Cosmos DB Native RBAC**  data-plane access with no primary keys
+- **Azure RBAC for Service Bus**  no SAS tokens or connection strings
+- **KEDA**  event-driven autoscaling driven by Service Bus message counts
+- **Argo CD GitOps**  automated, self-healing reconciliation from Git
+- **Terraform**  fully scripted Azure infrastructure across dev and prod environments
+- **Observability**  Application Insights and structured logging
 
 ---
 
-# 🏗 High-Level Architecture
+## High-Level Architecture
 
 ```
-
-```
-               ┌──────────────────────┐
-               │       GitHub        │
-               │  (Source of Truth)  │
-               └──────────┬──────────┘
-                          │
-                          ▼
-                    ┌────────────┐
-                    │  Argo CD   │
-                    │  GitOps    │
-                    └──────┬─────┘
-                           │
-                           ▼
-```
-
-┌────────────────────────────────────────────────────────────┐
-│                        AKS Cluster                         │
-│                                                            │
-│   Namespace: core                                          │
-│                                                            │
-│   Namespace: workers                                       │
-│   └── KEDA ScaledObjects                                   │
-│                                                            │
-│   Namespace: keda                                          │
-│   └── keda-operator                                        │
-│                                                            │
-└────────────────────────────────────────────────────────────┘
-│                         │
-▼                         ▼
-Azure Service Bus          Azure Cosmos DB
-(Topic + Subscriptions)     (RBAC Only Access)
-
+GitHub (Source of Truth)
+        |
+        v
+   Argo CD (GitOps)
+        |
+        v
++-------------------------------------------------------+
+|                      AKS: jd-aks                      |
+|                                                       |
+|  Namespace: core                                      |
+|  +-- adservice, cartservice, checkoutservice,         |
+|      currencyservice, frontend,                       |
+|      productcatalogservice, recommendationservice     |
+|                                                       |
+|  Namespace: workers                                   |
+|  +-- checkout-worker, email-worker,                   |
+|      payment-worker, shipping-worker                  |
+|      (each with KEDA ScaledObject)                    |
+|                                                       |
+|  Namespace: keda                                      |
+|  +-- keda-operator (Workload Identity auth to SB)     |
+|                                                       |
+|  Namespace: argocd                                    |
+|  +-- Argo CD control plane                            |
++-------------------------------------------------------+
+        |                         |
+        v                         v
+Azure Service Bus           Azure Cosmos DB
+sre-sb-namespace            SQL API, RBAC only
+topic: business-events
+        |
+        v
+   Azure Cache for Redis
 ```
 
 ---
 
-# 🧠 Core Platform Components
-
----
-
-## 1️⃣ Worker Services
-
-Each worker:
-
-- Uses `DefaultAzureCredential()`
-- Authenticates via Workload Identity
-- Connects to:
-  - Azure Service Bus
-  - Azure Cosmos DB
-- Scales via KEDA
-
-No secrets.
-No connection strings.
-No stored keys.
-
----
-
-## 3️⃣ Azure Service Bus (Event Backbone)
-
-- Topic: `business-events`
-- Subscriptions:
-  - order-sub
-  - retry-sub
-
-KEDA monitors message count and scales deployments.
-
----
-````
-### 📷 IMAGE C – Service Bus Namespace (Azure Portal)
-
-> <img width="901" height="422" alt="image" src="https://github.com/user-attachments/assets/00387330-e052-4358-8822-639803cc0121" />
-
-````
----
-
-## 4️⃣ Azure Cosmos DB (Data Layer)
-
-- SQL API
-- Native RBAC
-- No primary keys used
-- Role: `Cosmos DB Built-in Data Contributor`
-
-Authentication via:
-
-```python
-CosmosClient(endpoint, credential=DefaultAzureCredential())
-````
-
----
-
-## 5️⃣ Azure Workload Identity (Zero-Secret Model)
-
-Authentication flow:
-
-1. AKS OIDC issuer enabled
-2. User Assigned Managed Identity created
-3. Federated Identity Credential configured
-4. Kubernetes ServiceAccount annotated:
+## Repository Structure
 
 ```
-azure.workload.identity/client-id: <managed-identity-client-id>
+sre-proj-upgrade/
++-- helm/
+|   +-- core-services/          # Helm charts for storefront microservices
+|   |   +-- adservice/
+|   |   +-- cartservice/
+|   |   +-- checkoutservice/
+|   |   +-- currencyservice/
+|   |   +-- frontend/
+|   |   +-- productcatalogservice/
+|   |   +-- recommendationservice/
+|   +-- workers/                # Helm charts for KEDA-scaled event workers
+|       +-- checkout-worker/
+|       +-- email-worker/
+|       +-- payment-worker/
+|       +-- shipping-worker/
++-- kubernetes-platform/
+|   +-- argocd/
+|   |   +-- root-app.yaml       # App of Apps bootstrap
+|   |   +-- apps/               # One Argo CD Application per service/worker
+|   +-- keda/
+|   |   +-- keda-operator-sa.yaml
+|   +-- namespaces/             # argocd, core, keda, workers
+|   +-- observability/
+|       +-- app-insights/
+|       +-- logging/
++-- services/                   # Microservice source code
+|   +-- adservice/              # Java (gRPC)
+|   +-- cartservice/            # .NET
+|   +-- checkoutservice/        # Go
+|   +-- currencyservice/        # Node.js
+|   +-- emailservice/           # Python
+|   +-- frontend/               # Go
+|   +-- loadgenerator/          # Python / Locust
+|   +-- paymentservice/         # Node.js
+|   +-- productcatalogservice/  # Go
+|   +-- recommendationservice/  # Python
+|   +-- shippingservice/        # Go
+|   +-- shoppingassistantservice/
++-- terraform/
+    +-- environments/
+    |   +-- dev/                # dev config + state
+    |   +-- prod/               # prod config + state
+    +-- modules/
+        +-- aks/
+        +-- cosmos/
+        +-- network/
+        +-- observability/
+        +-- redis/
+        +-- servicebus/
+        +-- workload-identity/
 ```
-
-5. Pod receives projected OIDC token
-6. Azure AD validates token
-7. Access token issued
-8. Resource accessed via RBAC
-
-No secret injection required.
 
 ---
 
-# ⚡ KEDA – Event-Driven Autoscaling
+## Core Services (Namespace: `core`)
 
-KEDA ScaledObject monitors Service Bus:
+The storefront microservices are adapted from the Google Online Boutique demo:
+
+| Service | Language | Role |
+|---|---|---|
+| `frontend` | Go | HTTP server, renders the shop UI |
+| `adservice` | Java | Returns context-targeted ads |
+| `cartservice` | .NET | Manages user shopping carts via Redis |
+| `checkoutservice` | Go | Orchestrates the checkout flow |
+| `currencyservice` | Node.js | Currency conversion |
+| `productcatalogservice` | Go | Product listing and search |
+| `recommendationservice` | Python | Product recommendations |
+
+Each service is deployed via its own Helm chart under `helm/core-services/` and managed by a dedicated Argo CD Application in `kubernetes-platform/argocd/apps/`.
+
+---
+
+## Worker Services (Namespace: `workers`)
+
+Workers subscribe to the `business-events` Service Bus topic and process domain events asynchronously. Each worker:
+
+- Authenticates to Azure via Workload Identity (`DefaultAzureCredential`)
+- Reads from a dedicated Service Bus subscription
+- Writes results to Cosmos DB
+- Scales to zero when idle via KEDA
+
+| Worker | Service Bus Subscription |
+|---|---|
+| `checkout-worker` | `checkoutservice-sub` |
+| `email-worker` | `emailservice-sub` |
+| `payment-worker` | `payment-sub` |
+| `shipping-worker` | `shipping-sub` |
+
+Each worker chart contains:
+
+- `templates/deployment.yaml`
+- `templates/serviceaccount.yaml` (annotated with Workload Identity client ID)
+- `templates/scaledobject.yaml`
+- `templates/trigger-auth.yaml`
+
+---
+
+## Azure Workload Identity
+
+Authentication flow  no credentials stored anywhere:
+
+1. AKS cluster has OIDC issuer enabled
+2. Terraform provisions a User Assigned Managed Identity per worker
+3. A Federated Identity Credential links the identity to the Kubernetes ServiceAccount
+4. The ServiceAccount is annotated with the managed identity client ID:
+
+```yaml
+azure.workload.identity/client-id: "<client-id>"
+```
+
+5. At runtime the pod receives a projected OIDC token
+6. Entra ID validates the token and issues an access token
+7. The worker accesses Service Bus and Cosmos DB using Azure RBAC
+
+No passwords. No connection strings. No Kubernetes Secrets.
+
+---
+
+## KEDA  Event-Driven Autoscaling
+
+KEDA monitors the Service Bus subscription message count:
 
 ```yaml
 triggers:
   - type: azure-servicebus
     metadata:
       topicName: business-events
-      subscriptionName: retry-sub
-      messageCount: "1"
+      subscriptionName: checkoutservice-sub
+      messageCount: "3"
 ```
 
-Scaling behavior:
+KEDA authenticates to Service Bus using the same Workload Identity federated credential via a `TriggerAuthentication` object  no SAS tokens required.
 
-* Queue length > threshold → scale up
-* Queue empty → scale down to 0
+Scaling behaviour:
 
----
-
-### 📷 IMAGE A – Helm Install KEDA
-
-<img width="940" height="475" alt="image" src="https://github.com/user-attachments/assets/94dacb1b-4e9e-40a1-a913-5782db604578" />
-
-> helm install keda kedacore/keda --namespace keda --create-namespace
+- Messages present  scale up (up to `maxReplicaCount: 15`)
+- Queue empty  scale down to zero (`minReplicaCount: 0`)
 
 ---
 
-### 📷 IMAGE B – KEDA Pods Running
+## Argo CD  GitOps
 
-<img width="940" height="431" alt="image" src="https://github.com/user-attachments/assets/f747366d-ea22-45d4-a676-ac2e343044c2" />
+The repository is the single source of truth. An App of Apps pattern is used:
 
-> kubectl get pods -n keda
+- `kubernetes-platform/argocd/root-app.yaml` bootstraps the platform
+- `kubernetes-platform/argocd/apps/` contains one `Application` manifest per service and worker
+- All applications use automated sync, prune, and self-heal:
 
----
+```yaml
+syncPolicy:
+  automated:
+    prune: true
+    selfHeal: true
+```
 
-# 🔄 Argo CD – GitOps Continuous Reconciliation
-
-Argo CD manages:
-
-* worker deployments
-* scaled objects
-* service accounts
-* namespace manifests
-
-Auto Sync:
-
-* Enabled
-* Prune enabled
-* Self-heal enabled
-
-Manual drift is reverted automatically.
+Any manual change to the cluster is automatically reverted.
 
 ---
 
-### 📷 IMAGE J – Argo CD UI
+## Infrastructure (Terraform)
 
-<img width="940" height="509" alt="image" src="https://github.com/user-attachments/assets/f032f452-7c24-4822-ba28-5d4d4b7dae13" />
+All Azure resources are provisioned via Terraform modules driven by per-environment `config.yaml` files.
 
-> (Insert screenshot)
+**Dev environment** (`terraform/environments/dev/`):
+
+- Resource group: `jd-core-rg`  West US 2
+- AKS cluster: `jd-aks` (system pool `Standard_B4als_v2`, user pool `Standard_D2s_v3`)
+- Cosmos DB (SQL API, 4000 RU/s)
+- Service Bus namespace `sre-sb-namespace` (Standard SKU)
+- Azure Cache for Redis
+- Virtual network with dedicated AKS subnet
+- Log Analytics workspace + Application Insights
+- Workload Identity  one User Assigned Managed Identity per worker
+
+**Modules:**
+
+| Module | Resources |
+|---|---|
+| `aks` | AKS cluster, OIDC issuer, node pools |
+| `cosmos` | Cosmos DB account, database, container, RBAC role assignment |
+| `servicebus` | Namespace, topic, subscriptions |
+| `redis` | Azure Cache for Redis |
+| `network` | VNet, subnet |
+| `observability` | Log Analytics, Application Insights |
+| `workload-identity` | Managed Identities, Federated Credentials, RBAC assignments |
+
+After `terraform apply`, worker client IDs are output for pasting into the relevant `helm/workers/*/values.yaml` files.
 
 ---
 
-# 🐳 Containerization
+## Security Model
 
-### Docker Build
+| Component | Method |
+|---|---|
+| AKS  Entra ID | OIDC Workload Identity |
+| Workers  Service Bus | Azure RBAC (`Azure Service Bus Data Receiver`) |
+| Workers  Cosmos DB | Cosmos Native RBAC (`Built-in Data Contributor`) |
+| KEDA  Service Bus | Workload Identity via TriggerAuthentication |
+| Kubernetes Secrets | None |
+| Connection Strings | None |
+| SAS Tokens | None |
 
 ---
 
-### 📷 IMAGE F – Docker Build
-<img width="940" height="456" alt="image" src="https://github.com/user-attachments/assets/21673e87-e5e2-4557-bd98-b6dcd564bc6c" />
+## End-to-End Event Flow
+
+1. An event is published to the `business-events` Service Bus topic
+2. KEDA detects the rising message count on the target subscription
+3. The worker Deployment scales up from zero
+4. The worker pod authenticates to Azure via Workload Identity
+5. The worker reads and processes the message from Service Bus
+6. Processed data is written to Cosmos DB
+7. When the queue drains, KEDA scales the worker back to zero
 
 ---
 
-Images pushed to Docker Hub:
-<img width="1877" height="1017" alt="image" src="https://github.com/user-attachments/assets/4c83ddfe-901e-426d-a0b6-c3ea1b535faa" />
+## Getting Started
+
+### Prerequisites
+
+- Azure CLI authenticated (`az login`)
+- Terraform >= 1.5
+- kubectl
+- Helm 3
+- Argo CD CLI
+
+### 1. Provision Infrastructure
+
+```bash
+cd terraform/environments/dev
+terraform init
+terraform apply
+```
+
+Note the `worker_client_ids` output and paste the values into the corresponding `helm/workers/*/values.yaml` files.
+
+### 2. Bootstrap Argo CD
+
+```bash
+kubectl create namespace argocd
+helm install argocd argo/argo-cd --namespace argocd
+kubectl apply -f kubernetes-platform/argocd/root-app.yaml
+```
+
+Argo CD will detect and sync all Application manifests automatically.
+
+### 3. Bootstrap KEDA
+
+```bash
+helm repo add kedacore https://kedacore.github.io/charts
+helm install keda kedacore/keda --namespace keda --create-namespace
+```
+
+### 4. Verify
+
+```bash
+# Core services
+kubectl get pods -n core
+
+# Workers
+kubectl get pods -n workers
+
+# KEDA scaled objects
+kubectl get scaledobject -n workers
+
+# Argo CD sync status
+argocd app list
+```
+
+---
+
+## Docker Images
+
+Service images are built from source under `services/` and pushed to Docker Hub:
 
 ```
+jukpozi/<service>:latest
 jukpozi/<service>-worker:latest
 ```
 
 ---
 
-# 🏗 Infrastructure Provisioning (Terraform)
+## Cost Management
 
-Provisioned Resources:
+Stop the AKS cluster to pause compute billing:
 
-* AKS Cluster
-* Cosmos DB Account
-* Service Bus Namespace
-* User Assigned Managed Identities
-* Role Assignments
-* OIDC Issuer Enabled
-
----
-
-### 📷 IMAGE D – Azure Resources After Terraform Apply
-
-> (Insert screenshot of resource group)
-
----
-
-# 🔐 Security Model
-
-| Component          | Authentication Method  |
-| ------------------ | ---------------------- |
-| AKS → Azure        | OIDC Workload Identity |
-| Workers → SB       | Azure RBAC             |
-| Workers → Cosmos   | Cosmos Native RBAC     |
-| Secrets in Cluster | None                   |
-| Connection Strings | None                   |
-
-Zero secret sprawl.
-Zero hardcoded credentials.
-
----
-
-# 🔄 End-to-End Flow
-
-1. Message published to Service Bus topic
-2. KEDA detects message count
-3. Deployment scales
-4. Worker authenticates using Workload Identity
-5. Worker processes message
-6. Data written to Cosmos DB
-7. Worker scales down when queue drains
-
----
-
-# 📁 Repository Structure
-
+```bash
+az aks stop --name jd-aks --resource-group jd-core-rg
 ```
-sre-proj/
-├── k8s/
-│   ├── core/
-│   │   └── keda/
-│   ├── workers/
-│   ├── namespaces/
-│   └── observability/
-├── services/
-│   ├── worker-service/
-│   └── test-service/
-└── terraform-infra/
+
+Tear down all resources:
+
+```bash
+az group delete --name jd-core-rg --yes --no-wait
 ```
 
 ---
 
-# 🎯 What This Demonstrates
+## Future Enhancements
 
-* Identity-first cloud design
-* Event-driven autoscaling
-* Zero-secret architecture
-* GitOps continuous reconciliation
-* Azure-native RBAC enforcement
-* Runtime operational control
-* Terraform-based infra provisioning
-* Kubernetes production patterns
-
----
-
-# 🛑 Cost Shutdown
-
-To stop billing:
-
-```
-az group delete --name <resource-group> --yes --no-wait
-```
-
-OR stop AKS:
-
-```
-az aks stop --name <aks-name> --resource-group <rg>
-```
+- Argo CD SSO via Entra ID
+- Argo CD Image Updater for automated image promotion
+- Environment promotion pipeline (dev  prod)
+- Prometheus + Grafana via GitOps
+- Azure Policy for AKS (admission control)
+- Multi-cluster federation
+- Distributed tracing with OpenTelemetry
 
 ---
 
-# 🚀 Future Enhancements
+## Author
 
-* Argo CD SSO via Entra ID
-* Environment promotion (dev → prod)
-* Argo Image Updater
-* Helm chart refactor
-* Prometheus + Grafana via GitOps
-* Multi-cluster deployment
-* Policy enforcement via Azure Policy for AKS
-
----
-
-# 👤 Author
-
-**Joshua Ukpozi**
-Cloud Infrastructure Engineer
-Azure | Kubernetes | Networking | IaC | Cloud Security
-
-```
-
----
+**Joshua Ukpozi**  
+Cloud Infrastructure Engineer  
+Azure  Kubernetes  Networking  IaC  Cloud Security
