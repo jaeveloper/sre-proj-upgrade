@@ -31,7 +31,10 @@ from grpc_health.v1 import health_pb2
 from grpc_health.v1 import health_pb2_grpc
 
 from opentelemetry import trace
-from opentelemetry.instrumentation.grpc import GrpcInstrumentorServer
+try:
+    from opentelemetry.instrumentation.grpc import GrpcInstrumentorServer
+except ImportError:
+    GrpcInstrumentorServer = None
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
@@ -221,8 +224,9 @@ if __name__ == '__main__':
           )
         )
       )
-    grpc_server_instrumentor = GrpcInstrumentorServer()
-    grpc_server_instrumentor.instrument()
+    if GrpcInstrumentorServer is not None:
+      grpc_server_instrumentor = GrpcInstrumentorServer()
+      grpc_server_instrumentor.instrument()
 
   except (KeyError, DefaultCredentialsError):
       logger.info("Tracing disabled.")
