@@ -1,6 +1,0 @@
-apiVersion: v2
-name: checkout-worker
-description: KEDA-scaled async worker — consumes checkout events from Azure Service Bus
-type: application
-version: 0.1.0
-appVersion: "latest"

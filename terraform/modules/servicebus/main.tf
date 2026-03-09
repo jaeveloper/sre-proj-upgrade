@@ -12,6 +12,38 @@ resource "azurerm_servicebus_topic" "events" {
   depends_on = [azurerm_servicebus_namespace.sb]
 }
 
+resource "azurerm_servicebus_topic" "checkout_events" {
+  name         = "checkout-events"
+  namespace_id = azurerm_servicebus_namespace.sb.id
+
+  depends_on = [azurerm_servicebus_namespace.sb]
+}
+
+# ── checkout-events subscriptions (event-driven workers) ─────────
+resource "azurerm_servicebus_subscription" "payment" {
+  name                                 = "payment"
+  topic_id                             = azurerm_servicebus_topic.checkout_events.id
+  max_delivery_count                   = 10
+  lock_duration                        = "PT30S"
+  dead_lettering_on_message_expiration = true
+}
+
+resource "azurerm_servicebus_subscription" "email" {
+  name                                 = "email"
+  topic_id                             = azurerm_servicebus_topic.checkout_events.id
+  max_delivery_count                   = 10
+  lock_duration                        = "PT30S"
+  dead_lettering_on_message_expiration = true
+}
+
+resource "azurerm_servicebus_subscription" "shipping" {
+  name                                 = "shipping"
+  topic_id                             = azurerm_servicebus_topic.checkout_events.id
+  max_delivery_count                   = 10
+  lock_duration                        = "PT30S"
+  dead_lettering_on_message_expiration = true
+}
+
 # ── microservice workers ─────────────────────────────────────────
 resource "azurerm_servicebus_subscription" "adservice" {
   name               = "adservice-sub"
@@ -21,12 +53,6 @@ resource "azurerm_servicebus_subscription" "adservice" {
 
 resource "azurerm_servicebus_subscription" "cartservice" {
   name               = "cartservice-sub"
-  topic_id           = azurerm_servicebus_topic.events.id
-  max_delivery_count = 10
-}
-
-resource "azurerm_servicebus_subscription" "checkoutservice" {
-  name               = "checkoutservice-sub"
   topic_id           = azurerm_servicebus_topic.events.id
   max_delivery_count = 10
 }
