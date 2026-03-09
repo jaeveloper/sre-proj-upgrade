@@ -7,7 +7,7 @@ image:
   pullPolicy: Always
 
 serviceAccount:
-  name: payment-worker-sa
+  name: paymentservice-worker-sa
   clientId: "b023641f-3f8a-45b0-a768-81cd63548666"
 
 env:

@@ -7,7 +7,7 @@ image:
   pullPolicy: Always
 
 serviceAccount:
-  name: email-worker-sa
+  name: emailservice-worker-sa
   clientId: "5128d644-0463-4e9d-bad8-fa2d26882f89"
 
 env:
