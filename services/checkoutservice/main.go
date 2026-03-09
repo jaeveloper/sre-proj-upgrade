@@ -318,13 +318,7 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 func (cs *checkoutService) initServiceBusPublisher() error {
 	fqns := fmt.Sprintf("%s.servicebus.windows.net", cs.serviceBusNamespace)
 
-	credentialOptions := &azidentity.DefaultAzureCredentialOptions{}
-	clientID := os.Getenv("AZURE_CLIENT_ID")
-	if clientID != "" {
-		credentialOptions.ManagedIdentityClientID = clientID
-	}
-
-	cred, err := azidentity.NewDefaultAzureCredential(credentialOptions)
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
 		return fmt.Errorf("failed to create azure credential: %+v", err)
 	}
