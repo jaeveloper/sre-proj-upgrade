@@ -30,6 +30,7 @@ FROM scratch
 
 WORKDIR /src
 COPY --from=builder /go/bin/shippingservice /src/shippingservice
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 ENV APP_PORT=50051
 
 # Definition of this variable is used by 'skaffold debug' to identify a golang binary.
