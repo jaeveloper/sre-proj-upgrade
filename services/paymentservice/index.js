@@ -96,7 +96,8 @@ if (process.env.WORKER_MODE === 'true') {
           logger.info(`Payment completed for order_id=${order.order_id}`);
         } catch (err) {
           logger.warn(`Payment processing failed: ${err.message}`);
-          await receiver.abandonMessage(msg);
+          await receiver.completeMessage(msg);
+          logger.warn('Payment worker completed non-retriable message to avoid retry loop');
         }
       },
       processError: async (args) => {
