@@ -16,12 +16,15 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
 	"time"
 
 	"cloud.google.com/go/profiler"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/messaging/azservicebus"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -81,6 +84,12 @@ type checkoutService struct {
 
 	paymentSvcAddr string
 	paymentSvcConn *grpc.ClientConn
+
+	serviceBusNamespace        string
+	serviceBusTopic            string
+	serviceBusClient           *azservicebus.Client
+	serviceBusSender           *azservicebus.Sender
+	serviceBusPublisherEnabled bool
 }
 
 func main() {
@@ -113,12 +122,32 @@ func main() {
 	mustMapEnv(&svc.emailSvcAddr, "EMAIL_SERVICE_ADDR")
 	mustMapEnv(&svc.paymentSvcAddr, "PAYMENT_SERVICE_ADDR")
 
+	svc.serviceBusNamespace = os.Getenv("SERVICEBUS_NAMESPACE")
+	if svc.serviceBusNamespace == "" {
+		svc.serviceBusNamespace = "sre-sb-namespace"
+	}
+	svc.serviceBusTopic = os.Getenv("SERVICEBUS_TOPIC")
+	if svc.serviceBusTopic == "" {
+		svc.serviceBusTopic = "checkout-events"
+	}
+
 	mustConnGRPC(ctx, &svc.shippingSvcConn, svc.shippingSvcAddr)
 	mustConnGRPC(ctx, &svc.productCatalogSvcConn, svc.productCatalogSvcAddr)
 	mustConnGRPC(ctx, &svc.cartSvcConn, svc.cartSvcAddr)
 	mustConnGRPC(ctx, &svc.currencySvcConn, svc.currencySvcAddr)
 	mustConnGRPC(ctx, &svc.emailSvcConn, svc.emailSvcAddr)
 	mustConnGRPC(ctx, &svc.paymentSvcConn, svc.paymentSvcAddr)
+
+	if os.Getenv("ENABLE_EVENT_PUBLISHING") == "1" {
+		if err := svc.initServiceBusPublisher(); err != nil {
+			log.Warnf("service bus event publishing init failed: %+v", err)
+		} else {
+			svc.serviceBusPublisherEnabled = true
+			log.Infof("service bus event publishing enabled: topic=%q namespace=%q", svc.serviceBusTopic, svc.serviceBusNamespace)
+		}
+	} else {
+		log.Info("service bus event publishing disabled")
+	}
 
 	log.Infof("service config: %+v", svc)
 
@@ -274,8 +303,80 @@ func (cs *checkoutService) PlaceOrder(ctx context.Context, req *pb.PlaceOrderReq
 	} else {
 		log.Infof("order confirmation email sent to %q", req.Email)
 	}
+
+	if cs.serviceBusPublisherEnabled {
+		if err := cs.publishCheckoutEvent(ctx, req, orderResult, &total); err != nil {
+			log.Warnf("failed to publish checkout event for order_id=%q: %+v", orderResult.OrderId, err)
+		} else {
+			log.Infof("checkout event published for order_id=%q", orderResult.OrderId)
+		}
+	}
 	resp := &pb.PlaceOrderResponse{Order: orderResult}
 	return resp, nil
+}
+
+func (cs *checkoutService) initServiceBusPublisher() error {
+	fqns := fmt.Sprintf("%s.servicebus.windows.net", cs.serviceBusNamespace)
+
+	credentialOptions := &azidentity.DefaultAzureCredentialOptions{}
+	clientID := os.Getenv("AZURE_CLIENT_ID")
+	if clientID != "" {
+		credentialOptions.ManagedIdentityClientID = clientID
+	}
+
+	cred, err := azidentity.NewDefaultAzureCredential(credentialOptions)
+	if err != nil {
+		return fmt.Errorf("failed to create azure credential: %+v", err)
+	}
+
+	client, err := azservicebus.NewClient(fqns, cred, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create service bus client: %+v", err)
+	}
+
+	sender, err := client.NewSender(cs.serviceBusTopic, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create service bus sender: %+v", err)
+	}
+
+	cs.serviceBusClient = client
+	cs.serviceBusSender = sender
+	return nil
+}
+
+func (cs *checkoutService) publishCheckoutEvent(ctx context.Context, req *pb.PlaceOrderRequest, order *pb.OrderResult, total *pb.Money) error {
+	if cs.serviceBusSender == nil {
+		return fmt.Errorf("service bus sender is not initialized")
+	}
+
+	totalValue := float64(total.GetUnits()) + (float64(total.GetNanos()) / 1000000000.0)
+
+	event := map[string]interface{}{
+		"order_id": order.GetOrderId(),
+		"total":    totalValue,
+		"email":    req.GetEmail(),
+	}
+
+	if cc := req.GetCreditCard(); cc != nil {
+		event["credit_card"] = map[string]interface{}{
+			"credit_card_number":           cc.GetCreditCardNumber(),
+			"credit_card_cvv":              cc.GetCreditCardCvv(),
+			"credit_card_expiration_month": cc.GetCreditCardExpirationMonth(),
+			"credit_card_expiration_year":  cc.GetCreditCardExpirationYear(),
+		}
+	}
+
+	payload, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("failed to marshal checkout event payload: %+v", err)
+	}
+
+	message := &azservicebus.Message{Body: payload}
+	if err := cs.serviceBusSender.SendMessage(ctx, message, nil); err != nil {
+		return fmt.Errorf("failed to send checkout event message: %+v", err)
+	}
+
+	return nil
 }
 
 type orderPrep struct {

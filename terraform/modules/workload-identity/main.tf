@@ -19,6 +19,14 @@ resource "azurerm_federated_identity_credential" "worker" {
   subject         = "system:serviceaccount:${var.k8s_namespace}:${each.key}-sa"
 }
 
+resource "azurerm_federated_identity_credential" "checkoutservice_core" {
+  name      = "checkoutservice-core"
+  parent_id = azurerm_user_assigned_identity.worker["checkoutservice-worker"].id
+  audience  = ["api://AzureADTokenExchange"]
+  issuer    = var.oidc_issuer_url
+  subject   = "system:serviceaccount:core:checkoutservice-sa"
+}
+
 # Federated Identity Credential (KEDA operator override)
 # When TriggerAuthentication uses identityId to override, KEDA presents the
 # keda-operator SA token — so each worker identity needs a federated credential
@@ -41,6 +49,12 @@ resource "azurerm_role_assignment" "servicebus_receiver" {
   scope                = var.servicebus_namespace_id
   role_definition_name = "Azure Service Bus Data Receiver"
   principal_id         = azurerm_user_assigned_identity.worker[each.key].principal_id
+}
+
+resource "azurerm_role_assignment" "checkoutservice_servicebus_sender" {
+  scope                = var.servicebus_namespace_id
+  role_definition_name = "Azure Service Bus Data Sender"
+  principal_id         = azurerm_user_assigned_identity.worker["checkoutservice-worker"].principal_id
 }
 
 # ─── KEDA Operator Identity ───────────────────────────────────────────────────

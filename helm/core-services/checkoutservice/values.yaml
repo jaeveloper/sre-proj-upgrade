@@ -10,6 +10,7 @@ image:
 
 serviceAccount:
   name: checkoutservice-sa
+  clientId: "0744a964-44cb-470d-976c-0251afd3db83"
 
 containerPort: 5050
 
@@ -40,6 +41,14 @@ env:
     value: "emailservice.core.svc.cluster.local:5000"
   - name: PAYMENT_SERVICE_ADDR
     value: "paymentservice.core.svc.cluster.local:50051"
+  - name: ENABLE_EVENT_PUBLISHING
+    value: "1"
+  - name: SERVICEBUS_NAMESPACE
+    value: "sre-sb-namespace"
+  - name: SERVICEBUS_TOPIC
+    value: "checkout-events"
+  - name: AZURE_CLIENT_ID
+    value: "0744a964-44cb-470d-976c-0251afd3db83"
   - name: ENABLE_TRACING
     value: "0"
   - name: ENABLE_PROFILER
