@@ -23,10 +23,10 @@ func getEnvOrDefault(key, defaultVal string) string {
 }
 
 func startWorker() {
-	namespace    := getEnvOrDefault("SERVICEBUS_NAMESPACE", "sre-sb-namespace")
-	topic        := getEnvOrDefault("SERVICEBUS_TOPIC", "checkout-events")
+	namespace := getEnvOrDefault("SERVICEBUS_NAMESPACE", "sre-sb-namespace")
+	topic := getEnvOrDefault("SERVICEBUS_TOPIC", "checkout-events")
 	subscription := getEnvOrDefault("SERVICEBUS_SUBSCRIPTION", "shipping")
-	fqns         := namespace + ".servicebus.windows.net"
+	fqns := namespace + ".servicebus.windows.net"
 
 	cred, err := azidentity.NewDefaultAzureCredential(nil)
 	if err != nil {
@@ -68,7 +68,7 @@ func startWorker() {
 			log.Infof("[ShipOrder] Processing order_id=%s total=%.2f", order.OrderID, order.Total)
 
 			trackingID := CreateTrackingId("worker-dispatch-center")
-			quote      := CreateQuoteFromCount(1)
+			quote := CreateQuoteFromCount(1)
 
 			log.Infof("[ShipOrder] tracking_id=%s cost=$%d.%02d", trackingID, quote.Dollars, quote.Cents)
 
