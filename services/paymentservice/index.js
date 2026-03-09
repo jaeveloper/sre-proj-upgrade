@@ -65,11 +65,52 @@ if (process.env.ENABLE_TRACING == "1") {
 
 
 const path = require('path');
-const HipsterShopServer = require('./server');
 
-const PORT = process.env['PORT'];
-const PROTO_PATH = path.join(__dirname, '/proto/');
+if (process.env.WORKER_MODE === 'true') {
+  const { ServiceBusClient } = require('@azure/service-bus');
+  const { DefaultAzureCredential } = require('@azure/identity');
+  const charge = require('./charge');
 
-const server = new HipsterShopServer(PROTO_PATH, PORT);
+  const namespace    = process.env.SERVICEBUS_NAMESPACE || 'sre-sb-namespace';
+  const topic        = process.env.SERVICEBUS_TOPIC || 'checkout-events';
+  const subscription = process.env.SERVICEBUS_SUBSCRIPTION || 'payment';
+  const fqns         = `${namespace}.servicebus.windows.net`;
 
-server.listen();
+  async function runWorker() {
+    const credential = new DefaultAzureCredential();
+    const client     = new ServiceBusClient(fqns, credential);
+    const receiver   = client.createReceiver(topic, subscription);
+
+    logger.info(`Payment worker started — ${fqns} topic=${topic} sub=${subscription}`);
+
+    receiver.subscribe({
+      processMessage: async (msg) => {
+        try {
+          const order = msg.body;
+          logger.info(`Processing payment for order_id=${order.order_id} total=${order.total}`);
+          charge({
+            amount: { currency_code: 'USD', units: order.total || 0, nanos: 0 },
+            credit_card: order.credit_card || {}
+          });
+          await receiver.completeMessage(msg);
+          logger.info(`Payment completed for order_id=${order.order_id}`);
+        } catch (err) {
+          logger.warn(`Payment processing failed: ${err.message}`);
+          await receiver.abandonMessage(msg);
+        }
+      },
+      processError: async (args) => {
+        logger.error(`Service Bus error: ${args.error}`);
+      }
+    });
+  }
+
+  runWorker().catch(err => { logger.error(err); process.exit(1); });
+
+} else {
+  const HipsterShopServer = require('./server');
+  const PORT       = process.env['PORT'];
+  const PROTO_PATH = path.join(__dirname, '/proto/');
+  const server     = new HipsterShopServer(PROTO_PATH, PORT);
+  server.listen();
+}

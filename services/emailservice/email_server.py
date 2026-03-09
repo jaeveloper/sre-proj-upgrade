@@ -161,6 +161,40 @@ def initStackdriverProfiling():
   return
 
 
+def start_worker():
+  import json
+  from azure.servicebus import ServiceBusClient
+  from azure.identity import DefaultAzureCredential
+
+  namespace  = os.environ.get('SERVICEBUS_NAMESPACE', 'sre-sb-namespace')
+  topic      = os.environ.get('SERVICEBUS_TOPIC', 'checkout-events')
+  subscription = os.environ.get('SERVICEBUS_SUBSCRIPTION', 'email')
+  fqns = f"{namespace}.servicebus.windows.net"
+
+  logger.info(f"Starting email worker — {fqns} topic={topic} sub={subscription}")
+
+  credential = DefaultAzureCredential()
+  client = ServiceBusClient(fqns, credential)
+
+  with client:
+    receiver = client.get_subscription_receiver(
+      topic_name=topic,
+      subscription_name=subscription
+    )
+    with receiver:
+      for msg in receiver:
+        try:
+          body = str(msg)
+          order = json.loads(body)
+          order_id = order.get('order_id', 'unknown')
+          logger.info(f"Sending confirmation email for order_id={order_id} total={order.get('total')}")
+          receiver.complete_message(msg)
+          logger.info(f"Email worker: completed message for order_id={order_id}")
+        except Exception as e:
+          logger.error(f"Email worker: failed to process message — {e}")
+          receiver.abandon_message(msg)
+
+
 if __name__ == '__main__':
   logger.info('starting the email service in dummy mode.')
 
@@ -195,4 +229,7 @@ if __name__ == '__main__':
   except Exception as e:
       logger.warn(f"Exception on Cloud Trace setup: {traceback.format_exc()}, tracing disabled.") 
   
-  start(dummy_mode = True)
+  if os.environ.get('WORKER_MODE', '').lower() == 'true':
+    start_worker()
+  else:
+    start(dummy_mode = True)

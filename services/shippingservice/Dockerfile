@@ -17,10 +17,10 @@ ARG TARGETOS
 ARG TARGETARCH
 WORKDIR /src
 
-# restore dependencies
-COPY go.mod go.sum ./
-RUN go mod download
+# Copy go.mod and all source first, then tidy to resolve new deps (e.g. Azure SDK)
+COPY go.mod ./
 COPY . .
+RUN go mod tidy
 
 # Skaffold passes in debug-oriented compiler flags
 ARG SKAFFOLD_GO_GCFLAGS
