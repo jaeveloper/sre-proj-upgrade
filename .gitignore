@@ -24,9 +24,16 @@ override.tf.json
 k8s/**/secret.yaml
 *secret.yaml
 
+# Local config / seed scripts that may contain credentials
+*.local.*
+local_config.*
+secrets/
+.secrets
+*credentials*
 
 __pycache__/
 *.pyc
 .env
+*.env.*
 terraform.tfstate
 terraform.tfstate.backup
