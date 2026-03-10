@@ -10,6 +10,8 @@ image:
 
 serviceAccount:
   name: cartservice-sa
+  # Get this value from: terraform -chdir=terraform/environments/dev output worker_client_ids
+  clientId: "546eacdf-f31f-4950-9319-73a6ce56713c"
 
 containerPort: 7070
 
@@ -30,3 +32,13 @@ env:
     value: "7070"
   - name: ENABLE_TRACING
     value: "0"
+  # Full StackExchange.Redis connection string stored in a K8s Secret.
+  # Create the secret: kubectl create secret generic redis-secret \
+  #   --namespace core \
+  #   --from-literal=connectionString="sre-redis-cart.redis.cache.windows.net:6380,ssl=true,abortConnect=false,password=<ACCESS_KEY>"
+  # Get ACCESS_KEY from: terraform -chdir=terraform/environments/dev output -raw redis_primary_key  (sensitive)
+  - name: REDIS_ADDR
+    valueFrom:
+      secretKeyRef:
+        name: redis-secret
+        key: connectionString

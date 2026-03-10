@@ -44,3 +44,18 @@ variable "keda_namespace" {
   description = "Kubernetes namespace where KEDA operator ServiceAccount lives"
   default     = "keda"
 }
+
+variable "cosmos_account_id" {
+  type        = string
+  description = "Resource ID of the Cosmos DB account"
+}
+
+variable "cosmos_account_name" {
+  type        = string
+  description = "Name of the Cosmos DB account (used for SQL role assignments)"
+}
+
+variable "redis_id" {
+  type        = string
+  description = "Resource ID of the Azure Cache for Redis instance"
+}

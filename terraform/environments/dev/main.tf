@@ -71,6 +71,9 @@ module "workload_identity" {
   rg_name                 = azurerm_resource_group.rg.name
   oidc_issuer_url         = module.aks.oidc_issuer_url
   servicebus_namespace_id = module.servicebus.namespace_id
+  cosmos_account_id       = module.cosmos.account_id
+  cosmos_account_name     = module.cosmos.account_name
+  redis_id                = module.redis.redis_id
 }
 
 output "worker_client_ids" {
@@ -81,4 +84,24 @@ output "worker_client_ids" {
 output "keda_operator_client_id" {
   description = "KEDA operator Managed Identity client ID — configure in KEDA ArgoCD app helm values"
   value       = module.workload_identity.keda_operator_client_id
+}
+
+output "cosmos_endpoint" {
+  description = "Cosmos DB endpoint — use in productcatalogservice COSMOS_ENDPOINT env var"
+  value       = module.cosmos.endpoint
+}
+
+output "cosmos_database" {
+  description = "Cosmos DB database name"
+  value       = module.cosmos.database_name
+}
+
+output "cosmos_container" {
+  description = "Cosmos DB container name"
+  value       = module.cosmos.container_name
+}
+
+output "redis_hostname" {
+  description = "Redis hostname — part of REDIS_ADDR connection string"
+  value       = module.redis.redis_hostname
 }

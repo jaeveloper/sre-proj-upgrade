@@ -80,3 +80,42 @@ resource "azurerm_role_assignment" "keda_servicebus_receiver" {
   role_definition_name = "Azure Service Bus Data Receiver"
   principal_id         = azurerm_user_assigned_identity.keda_operator.principal_id
 }
+
+# ─── Core Service Identities ──────────────────────────────────────────────────
+# cartservice and productcatalogservice run in the `core` namespace and need
+# their own federated credentials bound to their Managed Identities
+# (reusing the worker identities already created above).
+
+resource "azurerm_federated_identity_credential" "cartservice_core" {
+  name      = "cartservice-core"
+  parent_id = azurerm_user_assigned_identity.worker["cartservice-worker"].id
+  audience  = ["api://AzureADTokenExchange"]
+  issuer    = var.oidc_issuer_url
+  subject   = "system:serviceaccount:core:cartservice-sa"
+}
+
+resource "azurerm_federated_identity_credential" "productcatalogservice_core" {
+  name      = "productcatalogservice-core"
+  parent_id = azurerm_user_assigned_identity.worker["productcatalogservice-worker"].id
+  audience  = ["api://AzureADTokenExchange"]
+  issuer    = var.oidc_issuer_url
+  subject   = "system:serviceaccount:core:productcatalogservice-sa"
+}
+
+# ─── Cosmos DB RBAC ───────────────────────────────────────────────────────────
+# Grants productcatalogservice the built-in Cosmos DB Data Contributor role
+# so it can read/write documents via DefaultAzureCredential (Workload Identity).
+
+resource "azurerm_cosmosdb_sql_role_assignment" "productcatalog_data_contributor" {
+  resource_group_name = var.rg_name
+  account_name        = var.cosmos_account_name
+  role_definition_id  = "${var.cosmos_account_id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
+  principal_id        = azurerm_user_assigned_identity.worker["productcatalogservice-worker"].principal_id
+  scope               = var.cosmos_account_id
+}
+
+# ─── Redis IAM ────────────────────────────────────────────────────────────────
+# cartservice authenticates to Redis using the connection string stored in the
+# redis-secret Kubernetes Secret (access key). No Azure RBAC role is required
+# for data-plane access when using key authentication.
+# Management-plane access (portal/CLI) is covered by the subscription owner role.

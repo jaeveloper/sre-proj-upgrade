@@ -17,6 +17,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net"
 	"os"
@@ -25,6 +26,8 @@ import (
 	"cloud.google.com/go/alloydbconn"
 	secretmanager "cloud.google.com/go/secretmanager/apiv1"
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
+	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
+	"github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos"
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/productcatalogservice/genproto"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -34,11 +37,99 @@ func loadCatalog(catalog *pb.ListProductsResponse) error {
 	catalogMutex.Lock()
 	defer catalogMutex.Unlock()
 
+	if os.Getenv("COSMOS_ENDPOINT") != "" {
+		return loadCatalogFromCosmos(catalog)
+	}
+
 	if os.Getenv("ALLOYDB_CLUSTER_NAME") != "" {
 		return loadCatalogFromAlloyDB(catalog)
 	}
 
 	return loadCatalogFromLocalFile(catalog)
+}
+
+// cosmosProduct mirrors the JSON document structure stored in Cosmos DB.
+type cosmosProduct struct {
+	ID          string      `json:"id"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Picture     string      `json:"picture"`
+	PriceUSD    cosmosMoney `json:"priceUsd"`
+	Categories  []string    `json:"categories"`
+}
+
+type cosmosMoney struct {
+	CurrencyCode string `json:"currencyCode"`
+	Units        int64  `json:"units"`
+	Nanos        int32  `json:"nanos"`
+}
+
+func loadCatalogFromCosmos(catalog *pb.ListProductsResponse) error {
+	endpoint := os.Getenv("COSMOS_ENDPOINT")
+	dbName := os.Getenv("COSMOS_DATABASE")
+	containerName := os.Getenv("COSMOS_CONTAINER")
+
+	log.Infof("loading catalog from Cosmos DB: endpoint=%s db=%s container=%s", endpoint, dbName, containerName)
+
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		log.Warnf("failed to create Azure credential: %v", err)
+		return err
+	}
+
+	client, err := azcosmos.NewClientWithTokenCredential(endpoint, cred, nil)
+	if err != nil {
+		log.Warnf("failed to create Cosmos DB client: %v", err)
+		return err
+	}
+
+	container, err := client.NewContainer(dbName, containerName)
+	if err != nil {
+		log.Warnf("failed to get Cosmos container reference: %v", err)
+		return err
+	}
+
+	queryPager := container.NewQueryItemsPager(
+		"SELECT * FROM c",
+		azcosmos.NewPartitionKeyString(""),
+		&azcosmos.QueryOptions{QueryParameters: []azcosmos.QueryParameter{}},
+	)
+
+	catalog.Products = catalog.Products[:0]
+	ctx := context.Background()
+
+	for queryPager.More() {
+		page, err := queryPager.NextPage(ctx)
+		if err != nil {
+			log.Warnf("failed to read Cosmos DB page: %v", err)
+			return err
+		}
+
+		for _, itemBytes := range page.Items {
+			var doc cosmosProduct
+			if err := json.Unmarshal(itemBytes, &doc); err != nil {
+				log.Warnf("failed to unmarshal Cosmos document: %v", err)
+				return err
+			}
+
+			product := &pb.Product{
+				Id:          doc.ID,
+				Name:        doc.Name,
+				Description: doc.Description,
+				Picture:     doc.Picture,
+				PriceUsd: &pb.Money{
+					CurrencyCode: doc.PriceUSD.CurrencyCode,
+					Units:        doc.PriceUSD.Units,
+					Nanos:        doc.PriceUSD.Nanos,
+				},
+				Categories: doc.Categories,
+			}
+			catalog.Products = append(catalog.Products, product)
+		}
+	}
+
+	log.Infof("successfully loaded %d products from Cosmos DB", len(catalog.Products))
+	return nil
 }
 
 func loadCatalogFromLocalFile(catalog *pb.ListProductsResponse) error {

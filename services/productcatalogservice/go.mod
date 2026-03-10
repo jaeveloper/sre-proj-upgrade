@@ -8,6 +8,8 @@ require (
 	cloud.google.com/go/alloydbconn v1.15.0
 	cloud.google.com/go/profiler v0.4.2
 	cloud.google.com/go/secretmanager v1.14.6
+	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.8.0
+	github.com/Azure/azure-sdk-for-go/sdk/data/azcosmos v1.3.0
 	github.com/golang/protobuf v1.5.4
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/pkg/errors v0.9.1
