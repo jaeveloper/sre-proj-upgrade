@@ -4,6 +4,7 @@
 #
 #    pip-compile requirements.in
 #
+# setuptools must be listed first so pkg_resources is available for other installs
 setuptools
     # via pkg_resources (no longer bundled in Python 3.12+)
 backoff==2.2.1

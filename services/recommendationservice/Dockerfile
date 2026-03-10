@@ -23,7 +23,10 @@ RUN apk update \
 
 # get packages
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+# Install setuptools first — pkg_resources was removed from Python 3.12 stdlib
+# and some package install hooks depend on it before the main install resolves it.
+RUN pip install --no-cache-dir setuptools
+RUN pip install --no-cache-dir -r requirements.txt
 
 FROM base
 # Enable unbuffered logging
