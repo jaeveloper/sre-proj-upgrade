@@ -77,7 +77,7 @@ func loadCatalogFromCosmos(catalog *pb.ListProductsResponse) error {
 		return err
 	}
 
-	client, err := azcosmos.NewClientWithTokenCredential(endpoint, cred, nil)
+	client, err := azcosmos.NewClient(endpoint, cred, nil)
 	if err != nil {
 		log.Warnf("failed to create Cosmos DB client: %v", err)
 		return err
@@ -91,7 +91,7 @@ func loadCatalogFromCosmos(catalog *pb.ListProductsResponse) error {
 
 	queryPager := container.NewQueryItemsPager(
 		"SELECT * FROM c",
-		azcosmos.NewPartitionKeyString(""),
+		azcosmos.NewPartitionKey(),
 		&azcosmos.QueryOptions{QueryParameters: []azcosmos.QueryParameter{}},
 	)
 
