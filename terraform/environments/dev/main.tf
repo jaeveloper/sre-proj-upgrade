@@ -60,8 +60,9 @@ module "servicebus" {
 module "redis" {
   source   = "../../modules/redis"
 
-  location = local.config.location
-  rg_name  = azurerm_resource_group.rg.name
+  location        = local.config.location
+  rg_name         = azurerm_resource_group.rg.name
+  aks_outbound_ip = local.config.redis.aks_outbound_ip
 }
 
 module "workload_identity" {
