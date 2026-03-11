@@ -20,10 +20,6 @@ override.tf.json
 *_override.tf
 *_override.tf.json
 
-# Ignore Kubernetes secrets
-k8s/**/secret.yaml
-*secret.yaml
-
 # Local config / seed scripts that may contain credentials
 *.local.*
 local_config.*
