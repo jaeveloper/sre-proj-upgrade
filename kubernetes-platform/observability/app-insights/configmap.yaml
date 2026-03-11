@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: appinsights-config
+  namespace: core
+data:
+  APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=3ab84262-773c-4bdd-9bbc-cb1c549138d2;IngestionEndpoint=https://westus2-2.in.applicationinsights.azure.com/;LiveEndpoint=https://westus2.livediagnostics.monitor.azure.com/;ApplicationId=cb743b0c-8c66-4eff-8bdf-2f60cfbbea06"

@@ -1,0 +1,43 @@
+## ServiceMonitor — instructs Prometheus to scrape OTEL Collector metrics
+## and any service that exposes a /metrics endpoint in the core namespace.
+
+# ── OTEL Collector ───────────────────────────────────────────────────────────
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: otel-collector
+  namespace: observability
+  labels:
+    release: prometheus   # matches kube-prometheus-stack label selector
+spec:
+  namespaceSelector:
+    matchNames:
+      - observability
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: opentelemetry-collector
+  endpoints:
+    - port: prometheus
+      path: /metrics
+      interval: 30s
+
+---
+# ── Core microservices (opt-in via label) ────────────────────────────────────
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: core-services
+  namespace: observability
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - core
+  selector:
+    matchLabels:
+      monitoring: "true"   # add this label to any Service you want scraped
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s

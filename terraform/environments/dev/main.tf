@@ -132,3 +132,9 @@ output "redis_hostname" {
   description = "Redis hostname — part of REDIS_ADDR connection string"
   value       = module.redis.redis_hostname
 }
+
+output "app_insights_connection_string" {
+  description = "Application Insights connection string — paste into kubernetes-platform/observability/app-insights/configmap.yaml"
+  value       = module.observability.app_insights_connection_string
+  sensitive   = true
+}
