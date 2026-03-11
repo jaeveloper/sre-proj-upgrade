@@ -50,6 +50,10 @@ env:
   - name: AZURE_CLIENT_ID
     value: "0744a964-44cb-470d-976c-0251afd3db83"
   - name: ENABLE_TRACING
-    value: "0"
+    value: "1"
   - name: ENABLE_PROFILER
     value: "0"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://otel-collector.observability.svc.cluster.local:4317"
+  - name: OTEL_SERVICE_NAME
+    value: "checkoutservice"

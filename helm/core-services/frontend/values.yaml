@@ -45,6 +45,10 @@ env:
   - name: ENV_PLATFORM
     value: "azure"
   - name: ENABLE_TRACING
-    value: "0"
+    value: "1"
   - name: ENABLE_PROFILER
     value: "0"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://otel-collector.observability.svc.cluster.local:4317"
+  - name: OTEL_SERVICE_NAME
+    value: "frontend"

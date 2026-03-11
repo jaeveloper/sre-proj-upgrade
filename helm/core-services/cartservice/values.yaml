@@ -31,7 +31,11 @@ env:
   - name: ASPNETCORE_HTTP_PORTS
     value: "7070"
   - name: ENABLE_TRACING
-    value: "0"
+    value: "1"
+  - name: OTEL_EXPORTER_OTLP_ENDPOINT
+    value: "http://otel-collector.observability.svc.cluster.local:4317"
+  - name: OTEL_SERVICE_NAME
+    value: "cartservice"
   # Full StackExchange.Redis connection string stored in a K8s Secret.
   # Create the secret: kubectl create secret generic redis-secret \
   #   --namespace core \
