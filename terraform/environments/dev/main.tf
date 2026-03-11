@@ -77,6 +77,32 @@ module "workload_identity" {
   redis_id                = module.redis.redis_id
 }
 
+# ── Cosmos DB seed ───────────────────────────────────────────────────────────
+# Runs scripts/seed_cosmos.py after the products container is created (or
+# recreated). The trigger ensures it re-runs if the container is destroyed and
+# rebuilt, but is otherwise a no-op on subsequent applies (upserts are safe).
+resource "null_resource" "seed_cosmos" {
+  triggers = {
+    container_id = module.cosmos.container_id
+  }
+
+  provisioner "local-exec" {
+    command = "python ${path.module}/../../../scripts/seed_cosmos.py"
+
+    environment = {
+      COSMOS_ENDPOINT  = module.cosmos.endpoint
+      COSMOS_DATABASE  = module.cosmos.database_name
+      COSMOS_CONTAINER = module.cosmos.container_name
+      PRODUCTS_JSON    = "${path.module}/../../../services/productcatalogservice/products.json"
+    }
+  }
+
+  depends_on = [
+    module.cosmos,
+    module.workload_identity,
+  ]
+}
+
 output "worker_client_ids" {
   description = "Managed Identity client IDs — paste into helm/workers/*/values.yaml"
   value       = module.workload_identity.client_ids
