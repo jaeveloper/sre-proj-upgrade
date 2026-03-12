@@ -49,6 +49,6 @@ env:
   - name: ENABLE_PROFILER
     value: "0"
   - name: COLLECTOR_SERVICE_ADDR
-    value: "otel-collector.observability.svc.cluster.local:4317"
+    value: "otel-collector-opentelemetry-collector.observability.svc.cluster.local:4317"
   - name: OTEL_SERVICE_NAME
     value: "frontend"
