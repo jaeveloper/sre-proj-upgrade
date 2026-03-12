@@ -1,7 +1,4 @@
-## ServiceMonitor — instructs Prometheus to scrape OTEL Collector metrics
-## and any service that exposes a /metrics endpoint in the core namespace.
-
-# ── OTEL Collector ───────────────────────────────────────────────────────────
+# OTEL Collector
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -22,9 +19,7 @@ spec:
       interval: 30s
 
 ---
-# ── KEDA Operator ─────────────────────────────────────────────────────────────
-# Exposes keda_scaler_metrics_value (Service Bus message count seen by the scaler)
-# and keda_scaled_object_errors, keda_resource_totals, etc.
+# KEDA Operator
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -48,7 +43,7 @@ spec:
       interval: 30s
 
 ---
-# ── Core microservices (opt-in via label) ────────────────────────────────────
+# Core microservices (opt-in via label: monitoring: "true")
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -62,7 +57,7 @@ spec:
       - core
   selector:
     matchLabels:
-      monitoring: "true"   # add this label to any Service you want scraped
+      monitoring: "true"
   endpoints:
     - port: metrics
       path: /metrics

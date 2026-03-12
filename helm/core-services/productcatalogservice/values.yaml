@@ -10,7 +10,6 @@ image:
 
 serviceAccount:
   name: productcatalogservice-sa
-  # Get this value from: terraform -chdir=terraform/environments/dev output worker_client_ids
   clientId: "98224623-cf71-439e-b480-d726de30d10e"
 
 containerPort: 3550
@@ -38,9 +37,6 @@ env:
     value: "otel-collector-opentelemetry-collector.observability.svc.cluster.local:4317"
   - name: OTEL_SERVICE_NAME
     value: "productcatalogservice"
-  # Cosmos DB — when set, product catalog is loaded from Azure Cosmos DB
-  # instead of the local products.json file.
-  # Get values from: terraform -chdir=terraform/environments/dev output
   - name: COSMOS_ENDPOINT
     value: "https://sre-cosmos.documents.azure.com:443/"
   - name: COSMOS_DATABASE

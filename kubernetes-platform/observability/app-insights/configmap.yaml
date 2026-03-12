@@ -1,4 +1,4 @@
-# ConfigMap in core namespace — for services that reference App Insights directly
+# core namespace
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -7,7 +7,7 @@ metadata:
 data:
   APPLICATIONINSIGHTS_CONNECTION_STRING: "InstrumentationKey=3ab84262-773c-4bdd-9bbc-cb1c549138d2;IngestionEndpoint=https://westus2-2.in.applicationinsights.azure.com/;LiveEndpoint=https://westus2.livediagnostics.monitor.azure.com/;ApplicationId=cb743b0c-8c66-4eff-8bdf-2f60cfbbea06"
 ---
-# ConfigMap in observability namespace — for the OTEL Collector pod
+# observability namespace
 apiVersion: v1
 kind: ConfigMap
 metadata:
