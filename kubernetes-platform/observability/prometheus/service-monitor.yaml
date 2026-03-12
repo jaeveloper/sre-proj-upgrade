@@ -22,6 +22,32 @@ spec:
       interval: 30s
 
 ---
+# ── KEDA Operator ─────────────────────────────────────────────────────────────
+# Exposes keda_scaler_metrics_value (Service Bus message count seen by the scaler)
+# and keda_scaled_object_errors, keda_resource_totals, etc.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: keda-operator
+  namespace: observability
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - keda
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: keda-operator
+  endpoints:
+    - port: metricsservice
+      path: /metrics
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+      interval: 30s
+
+---
 # ── Core microservices (opt-in via label) ────────────────────────────────────
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
